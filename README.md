@@ -26,7 +26,7 @@ pip install -r SAELens-V/requirements.txt
 ```bash
 python ./scripts/llava_preprocess.py \
     --dataset_path <your-OBELICS-dataset-path> \
-    --tokenizer_name_or_path llava-hf/llava-v1.6-mistral-7b-hf \
+    --tokenizer_name_or_path "llava-hf/llava-v1.6-mistral-7b-hf" \
     --save_path "./data/processed_dataset" \
 ```
 1. SAE-V Training
