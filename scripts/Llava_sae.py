@@ -1,6 +1,15 @@
-import torch
-import os
 from sae_lens import LanguageModelSAERunnerConfig, SAETrainingRunner
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--model_class_name", type=str, default="HookedLlava")
+parser.add_argument("--language_model_name", type=str, default="mistralai/Mistral-7B-Instruct-v0.2")
+parser.add_argument("--local_model_path", type=str)
+parser.add_argument("--hook_name", type=str, default="blocks.16.hook_resid_post")
+parser.add_argument("--hook_layer", type=int, default=16)
+parser.add_argument("--dataset_path", type=str, default="./data/processed_dataset")
+parser.add_argument("--save_path", type=str, default="./model/SAEV_LLaVA_NeXT-7b_OBELICS")
+args = parser.parse_args()
 
 total_training_steps = 30000 # probably we should do more
 batch_size = 4096
@@ -10,17 +19,16 @@ lr_warm_up_steps = 0
 lr_decay_steps = total_training_steps // 5  # 20% of training
 l1_warm_up_steps = total_training_steps // 20  # 5% of training
 
-import pdb;pdb.set_trace()
-device = "cuda:2"
+device = "cuda:0"
 cfg = LanguageModelSAERunnerConfig(
     # Data Generating Function (Model + Training Distibuion)
-    model_class_name="HookedLlava",  # our model (more options here: https://neelnanda-io.github.io/TransformerLens/generated/model_properties_table.html)
-    model_name="mistralai/Mistral-7B-Instruct-v0.2",  # our model (more options here: https://neelnanda-io.github.io/TransformerLens/generated/model_properties_table.html)
-    local_model_path="",
-    hook_name="blocks.16.hook_resid_post",  # A valid hook point (see more details here: https://neelnanda-io.github.io/TransformerLens/generated/demos/Main_Demo.html#Hook-Points)
-    hook_layer=16,  # Only one layer in the model.
+    model_class_name=args.model_class_name, 
+    model_name=args.language_model_name,  # our model (more options here: https://neelnanda-io.github.io/TransformerLens/generated/model_properties_table.html)
+    local_model_path=args.local_model_path,
+    hook_name=args.hook_name,  # A valid hook point (see more details here: https://neelnanda-io.github.io/TransformerLens/generated/demos/Main_Demo.html#Hook-Points)
+    hook_layer=args.hook_layer,  # Only one layer in the model.
     d_in=4096,  # the width of the mlp output.
-    dataset_path="",  # this is a tokenized language dataset on Huggingface for the Tiny Stories corpus.
+    dataset_path=args.dataset_path,  # this is a tokenized language dataset on Huggingface for the Tiny Stories corpus.
     is_dataset_tokenized=True,
     streaming=True,  # we could pre-download the token dataset if it was small.
     # SAE Parameters
@@ -63,7 +71,7 @@ cfg = LanguageModelSAERunnerConfig(
     device=device,
     seed=42,
     n_checkpoints=20,
-    checkpoint_path="",
+    checkpoint_path=args.save_path,
     dtype="float32",
     model_from_pretrained_kwargs={"n_devices": 2},
 )
